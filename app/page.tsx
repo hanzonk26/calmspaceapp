@@ -1,55 +1,110 @@
-iexport default function Home() {
+export default function Home() {
   return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
-      <div style={{ maxWidth: 720, width: "100%", textAlign: "center" }}>
-        <h1 style={{ fontSize: 42, margin: 0 }}>CalmSpace</h1>
-        <p style={{ opacity: 0.8, marginTop: 12 }}>
-          Musik relaksasi sederhana untuk menenangkan pikiran.
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, #1e293b 0%, #020617 60%)",
+        color: "white",
+        padding: "40px 20px",
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 420,
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 28,
+            fontWeight: 600,
+            marginBottom: 8,
+          }}
+        >
+          CalmSpace
+        </h1>
+
+        <p
+          style={{
+            opacity: 0.7,
+            fontSize: 14,
+            marginBottom: 32,
+          }}
+        >
+          Ruang tenang untuk menenangkan pikiran ✨
         </p>
 
-        <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
-          <a
-            href="#"
+        {/* CARD */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+          }}
+        >
+          <button
             style={{
-              display: "block",
-              padding: "14px 16px",
+              padding: "16px",
               borderRadius: 14,
               border: "1px solid rgba(255,255,255,0.15)",
-              textDecoration: "none",
+              background: "rgba(255,255,255,0.05)",
+              color: "white",
+              fontSize: 16,
+              cursor: "pointer",
             }}
           >
-            🌧️ Rain — (nanti kita isi audio)
-          </a>
+            🌊 Ocean Sound
+            <div style={{ fontSize: 12, opacity: 0.6 }}>
+              coming soon
+            </div>
+          </button>
 
-          <a
-            href="#"
+          <button
             style={{
-              display: "block",
-              padding: "14px 16px",
+              padding: "16px",
               borderRadius: 14,
               border: "1px solid rgba(255,255,255,0.15)",
-              textDecoration: "none",
+              background: "rgba(255,255,255,0.05)",
+              color: "white",
+              fontSize: 16,
+              cursor: "pointer",
             }}
           >
-            🌊 Ocean — (nanti kita isi audio)
-          </a>
+            🔥 Fireplace
+            <div style={{ fontSize: 12, opacity: 0.6 }}>
+              coming soon
+            </div>
+          </button>
 
-          <a
-            href="#"
+          <button
             style={{
-              display: "block",
-              padding: "14px 16px",
+              padding: "16px",
               borderRadius: 14,
               border: "1px solid rgba(255,255,255,0.15)",
-              textDecoration: "none",
+              background: "rgba(255,255,255,0.05)",
+              color: "white",
+              fontSize: 16,
+              cursor: "pointer",
             }}
           >
-            🔥 Fireplace — (nanti kita isi audio)
-          </a>
+            🌧️ Rain
+            <div style={{ fontSize: 12, opacity: 0.6 }}>
+              coming soon
+            </div>
+          </button>
         </div>
 
-        <p style={{ opacity: 0.6, marginTop: 18, fontSize: 12 }}>
-          Next step: kita tambahin player audio + tombol play/pause.
+        <p
+          style={{
+            marginTop: 28,
+            fontSize: 12,
+            opacity: 0.5,
+          }}
+        >
+          Next step: tambahin audio player & timer ⏳
         </p>
       </div>
     </main>
