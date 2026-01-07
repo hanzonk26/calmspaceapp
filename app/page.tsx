@@ -1,68 +1,115 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-type TrackKey = "ocean" | "rain" | "fireplace";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Track = {
-  key: TrackKey;
   title: string;
   subtitle: string;
   emoji: string;
-  soundcloudUrl: string; // URL halaman SoundCloud (bukan mp3 direct)
+  url: string; // direct streaming URL (mp3/aac)
 };
 
-function scEmbedSrc(soundcloudUrl: string) {
-  // SoundCloud embed player menggunakan url (harus di-encode)
-  const encoded = encodeURIComponent(soundcloudUrl);
-  // Parameter dasar: tidak autoplay, tampilan minimal
-  return `https://w.soundcloud.com/player/?url=${encoded}&color=%231e293b&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`;
-}
-
 export default function Page() {
+  // Sumber: direct stream links resmi SomaFM
+  // Drone Zone: https://somafm.com/dronezone/directstreamlinks.html
+  // Space Station Soma: https://somafm.com/spacestation/directstreamlinks.html
+  // SomaFM Live list (includes Groove Salad): https://somafm.com/live/directstreamlinks.html
   const tracks: Track[] = useMemo(
     () => [
       {
-        key: "ocean",
-        title: "Ocean Waves",
-        subtitle: "Soothing Relaxation (SoundCloud)",
-        emoji: "🌊",
-        soundcloudUrl: "https://soundcloud.com/soothingrelaxation/ocean-waves",
+        title: "Drone Zone",
+        subtitle: "Ambient textures (SomaFM)",
+        emoji: "🌌",
+        url: "https://ice5.somafm.com/dronezone-256-mp3",
       },
       {
-        key: "rain",
-        title: "Rainy Day",
-        subtitle: "Soothing Relaxation (SoundCloud)",
-        emoji: "🌧️",
-        soundcloudUrl: "https://soundcloud.com/soothingrelaxation/rainy-day",
+        title: "Space Station Soma",
+        subtitle: "Chill electronic (SomaFM)",
+        emoji: "🛰️",
+        url: "https://ice5.somafm.com/spacestation-320-mp3",
       },
       {
-        key: "fireplace",
-        title: "Cracking Fireplace (1 Hour)",
-        subtitle: "Relaxing White Noise Sounds (SoundCloud)",
-        emoji: "🔥",
-        soundcloudUrl:
-          "https://soundcloud.com/relaxingwhitenoisesounds/cracking-fireplace-1-hour-of",
+        title: "Groove Salad",
+        subtitle: "Downtempo / chill (SomaFM)",
+        emoji: "🥗",
+        url: "https://ice5.somafm.com/groovesalad-128-mp3",
+      },
+      {
+        title: "SomaFM Live (alt)",
+        subtitle: "Various chill mix (SomaFM)",
+        emoji: "📻",
+        url: "https://ice5.somafm.com/live-128-mp3",
       },
     ],
     []
   );
 
-  const [active, setActive] = useState<TrackKey>("ocean");
-  const activeTrack = tracks.find((t) => t.key === active)!;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [index, setIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const active = tracks[index];
 
-  const card: React.CSSProperties = {
-    padding: "14px 14px",
-    borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(255,255,255,0.06)",
-    color: "white",
-    cursor: "pointer",
-    textAlign: "left",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+  useEffect(() => {
+    const a = new Audio();
+    a.preload = "none";
+    a.crossOrigin = "anonymous";
+    audioRef.current = a;
+
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+
+    // set initial
+    a.src = tracks[0].url;
+
+    return () => {
+      a.pause();
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+      audioRef.current = null;
+    };
+  }, [tracks]);
+
+  const play = async () => {
+    const a = audioRef.current;
+    if (!a) return;
+    try {
+      await a.play();
+    } catch (e) {
+      console.error(e);
+      alert("Browser memblokir autoplay. Klik Play sekali lagi.");
+    }
+  };
+
+  const pause = () => audioRef.current?.pause();
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) play();
+    else pause();
+  };
+
+  const setTrack = async (newIndex: number, autoplay = true) => {
+    const a = audioRef.current;
+    if (!a) return;
+    setIndex(newIndex);
+    a.pause();
+    a.src = tracks[newIndex].url;
+    a.load();
+    if (autoplay) await play();
+  };
+
+  const next = async () => {
+    const newIndex = (index + 1) % tracks.length;
+    await setTrack(newIndex, true);
+  };
+
+  const prev = async () => {
+    const newIndex = (index - 1 + tracks.length) % tracks.length;
+    await setTrack(newIndex, true);
   };
 
   return (
@@ -76,84 +123,101 @@ export default function Page() {
       }}
     >
       <div style={{ maxWidth: 520, margin: "0 auto" }}>
-        <header style={{ textAlign: "center", marginBottom: 18 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
-            🌿 CalmSpace
-          </h1>
+        <header style={{ textAlign: "center", marginBottom: 16 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0 }}>🌿 CalmSpace</h1>
           <p style={{ opacity: 0.7, marginTop: 8, fontSize: 14, marginBottom: 0 }}>
-            Healing vibes — tanpa download, tinggal play.
+            Audio-only healing streams — tanpa download, tanpa login.
           </p>
         </header>
 
-        {/* PILIH TRACK */}
-        <section style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {tracks.map((t) => {
-            const selected = t.key === active;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setActive(t.key)}
-                style={{
-                  ...card,
-                  outline: selected ? "2px solid rgba(125,211,252,0.45)" : "none",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ fontSize: 18 }}>{t.emoji}</div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>{t.title}</div>
-                    <div style={{ opacity: 0.7, fontSize: 12 }}>{t.subtitle}</div>
-                  </div>
-                </div>
-                <div style={{ opacity: 0.8, fontSize: 12 }}>
-                  {selected ? "Selected" : "Tap"}
-                </div>
-              </button>
-            );
-          })}
-        </section>
-
-        {/* PLAYER */}
+        {/* Now Playing */}
         <section
           style={{
-            marginTop: 14,
             padding: 14,
             borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.12)",
             background: "rgba(255,255,255,0.04)",
+            marginBottom: 12,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 18 }}>{activeTrack.emoji}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 18 }}>{active.emoji}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800 }}>{activeTrack.title}</div>
+              <div style={{ fontWeight: 900 }}>{active.title}</div>
               <div style={{ opacity: 0.7, fontSize: 12 }}>
-                Tekan tombol <b>Play</b> di player SoundCloud.
+                {active.subtitle} · {isPlaying ? "Playing" : "Paused"}
               </div>
             </div>
           </div>
 
-          <iframe
-            key={activeTrack.key} // force refresh saat ganti track
-            width="100%"
-            height="140"
-            scrolling="no"
-            frameBorder="no"
-            allow="autoplay"
-            src={scEmbedSrc(activeTrack.soundcloudUrl)}
-            style={{ borderRadius: 12, overflow: "hidden" }}
-          />
+          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <button onClick={prev} style={btn()}>
+              ⏮ Prev
+            </button>
+            <button onClick={toggle} style={btn(true)}>
+              {isPlaying ? "⏸ Pause" : "▶ Play"}
+            </button>
+            <button onClick={next} style={btn()}>
+              Next ⏭
+            </button>
+          </div>
 
           <div style={{ opacity: 0.6, fontSize: 12, marginTop: 10, lineHeight: 1.5 }}>
-            Tips: kalau suara tidak keluar, cek volume HP/laptop dan pastikan tidak mute. Di iOS kadang harus
-            tap Play sekali lagi.
+            Tips: kalau suara tidak keluar, cek volume perangkat & pastikan tab tidak mute. Di iOS kadang
+            perlu tap Play sekali lagi. Streaming bisa makan kuota.
           </div>
         </section>
 
+        {/* Station list */}
+        <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {tracks.map((t, i) => (
+            <button
+              key={t.title}
+              onClick={() => setTrack(i, true)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                padding: 14,
+                borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: i === index ? "rgba(125,211,252,0.12)" : "rgba(255,255,255,0.06)",
+                color: "white",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 18 }}>{t.emoji}</div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14 }}>{t.title}</div>
+                  <div style={{ opacity: 0.7, fontSize: 12 }}>{t.subtitle}</div>
+                </div>
+              </div>
+              <div style={{ opacity: 0.7, fontSize: 12 }}>{i === index ? "Selected" : "Tap"}</div>
+            </button>
+          ))}
+        </section>
+
         <footer style={{ marginTop: 14, textAlign: "center", opacity: 0.55, fontSize: 12 }}>
-          Sumber audio via SoundCloud embed (gratis untuk didengar, tanpa download).
+          Streams via SomaFM direct links (MP3). 1
         </footer>
       </div>
     </main>
   );
+}
+
+function btn(primary = false): React.CSSProperties {
+  return {
+    flex: 1,
+    padding: "12px 12px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.16)",
+    background: primary ? "rgba(56,189,248,0.9)" : "rgba(255,255,255,0.06)",
+    color: primary ? "#020617" : "white",
+    fontWeight: 800,
+    cursor: "pointer",
+  };
 }
